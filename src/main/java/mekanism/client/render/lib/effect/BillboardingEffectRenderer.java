@@ -2,11 +2,14 @@ package mekanism.client.render.lib.effect;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import mekanism.client.render.MekanismRenderType;
 import mekanism.common.lib.effect.CustomEffect;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.phys.Vec3;
 import org.joml.Matrix4f;
 import org.joml.Vector3f;
@@ -14,6 +17,16 @@ import org.joml.Vector3f;
 public class BillboardingEffectRenderer {
 
     private BillboardingEffectRenderer() {
+    }
+
+    // Iris 1.10.9+mc26.1.1 targets this old renderer descriptor.
+    @Deprecated(forRemoval = true)
+    @SuppressWarnings("unused")
+    private static void render(Identifier texture, String profilerSection, Supplier<CustomEffect> effectSupplier) {
+        Function<Identifier, RenderType> renderType = MekanismRenderType.SPS;
+        if (renderType != null) {
+            renderType.apply(texture);
+        }
     }
 
     public static void render(CustomEffect effect, CameraRenderState camera, MultiBufferSource renderer, PoseStack poseStack, int renderTick, float partialTick) {

@@ -7,6 +7,7 @@ import mekanism.client.render.entity.RenderFlame.FlameRenderState;
 import mekanism.common.entity.EntityFlame;
 import mekanism.common.util.MekanismUtils;
 import mekanism.common.util.MekanismUtils.ResourceType;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.culling.Frustum;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -26,6 +27,13 @@ public class RenderFlame extends EntityRenderer<EntityFlame, FlameRenderState> {
     public RenderFlame(EntityRendererProvider.Context context) {
         super(context);
         this.model = new FlameModel(context.bakeLayer(FlameModel.FLAME_LAYER));
+    }
+
+    // Iris 1.10.9+mc26.1.1 targets this old renderer descriptor.
+    @Deprecated(forRemoval = true)
+    @SuppressWarnings("unused")
+    public void render(EntityFlame flame, float yaw, float partialTick, PoseStack poseStack, MultiBufferSource renderer, int light) {
+        MekanismRenderType.FLAME.apply(TEXTURE);
     }
 
     @Override
