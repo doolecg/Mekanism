@@ -184,6 +184,8 @@ import net.minecraft.world.entity.player.PlayerModelType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.ModList;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
@@ -208,6 +210,26 @@ import net.neoforged.neoforge.common.NeoForge;
 @EventBusSubscriber(modid = Mekanism.MODID, value = Dist.CLIENT)
 public class ClientRegistration {
 
+    private static Boolean skipMekaSuitCustomArmorRendering;
+    private static boolean loggedSkippedMekaSuitCustomArmorRendering;
+
+    public static boolean skipMekaSuitCustomArmorRendering() {
+        if (skipMekaSuitCustomArmorRendering == null) {
+            skipMekaSuitCustomArmorRendering = ModList.get().getModContainerById("iris")
+                  .map(ModContainer::getModInfo)
+                  .map(info -> "1.10.9+mc26.1.1".equals(info.getVersion().toString()))
+                  .orElse(false);
+        }
+        return skipMekaSuitCustomArmorRendering;
+    }
+
+    private static void logSkippedMekaSuitCustomArmorRendering() {
+        if (!loggedSkippedMekaSuitCustomArmorRendering) {
+            loggedSkippedMekaSuitCustomArmorRendering = true;
+            Mekanism.logger.warn("Skipping MekaSuit custom armor rendering because Iris 1.10.9+mc26.1.1 has an incompatible Mekanism mixin. Update Iris to restore it.");
+        }
+    }
+
     @SubscribeEvent
     public static void init(FMLClientSetupEvent event) {
         NeoForge.EVENT_BUS.register(new ClientTickHandler());
@@ -216,11 +238,15 @@ public class ClientRegistration {
         if (Mekanism.hooks.recipeViewerCompatEnabled()) {
             NeoForge.EVENT_BUS.addListener(EventPriority.LOWEST, RenderTickHandler::guiOpening);
         }
-        IModuleHelper moduleHelper = IModuleHelper.INSTANCE;
-        moduleHelper.addMekaSuitModuleModels(Mekanism.rl("models/entity/mekasuit_modules.obj"));
-        moduleHelper.addMekaSuitModuleModelSpec("jetpack", MekanismModules.JETPACK_UNIT, EquipmentSlot.CHEST);
-        moduleHelper.addMekaSuitModuleModelSpec("modulator", MekanismModules.GRAVITATIONAL_MODULATING_UNIT, EquipmentSlot.CHEST);
-        moduleHelper.addMekaSuitModuleModelSpec("elytra", MekanismModules.ELYTRA_UNIT, EquipmentSlot.CHEST, LivingEntity::isFallFlying);
+        if (skipMekaSuitCustomArmorRendering()) {
+            logSkippedMekaSuitCustomArmorRendering();
+        } else {
+            IModuleHelper moduleHelper = IModuleHelper.INSTANCE;
+            moduleHelper.addMekaSuitModuleModels(Mekanism.rl("models/entity/mekasuit_modules.obj"));
+            moduleHelper.addMekaSuitModuleModelSpec("jetpack", MekanismModules.JETPACK_UNIT, EquipmentSlot.CHEST);
+            moduleHelper.addMekaSuitModuleModelSpec("modulator", MekanismModules.GRAVITATIONAL_MODULATING_UNIT, EquipmentSlot.CHEST);
+            moduleHelper.addMekaSuitModuleModelSpec("elytra", MekanismModules.ELYTRA_UNIT, EquipmentSlot.CHEST, LivingEntity::isFallFlying);
+        }
 
         //todo - 26.1: this shouldn't need extra - just a fix on the item model itself
         addLitModel(MekanismItems.MEKA_TOOL);
@@ -511,10 +537,14 @@ public class ClientRegistration {
         event.registerItem(new MekCustomArmorRenderProperties(ScubaMaskArmor.SCUBA_MASK), MekanismItems.SCUBA_MASK);
         event.registerItem(new MekCustomArmorRenderProperties(ScubaTankArmor.SCUBA_TANK), MekanismItems.SCUBA_TANK);
 
-        event.registerItem(MekaSuitArmor.HELMET, MekanismItems.MEKASUIT_HELMET);
-        event.registerItem(MekaSuitArmor.BODYARMOR, MekanismItems.MEKASUIT_BODYARMOR);
-        event.registerItem(MekaSuitArmor.PANTS, MekanismItems.MEKASUIT_PANTS);
-        event.registerItem(MekaSuitArmor.BOOTS, MekanismItems.MEKASUIT_BOOTS);
+        if (skipMekaSuitCustomArmorRendering()) {
+            logSkippedMekaSuitCustomArmorRendering();
+        } else {
+            event.registerItem(MekaSuitArmor.HELMET, MekanismItems.MEKASUIT_HELMET);
+            event.registerItem(MekaSuitArmor.BODYARMOR, MekanismItems.MEKASUIT_BODYARMOR);
+            event.registerItem(MekaSuitArmor.PANTS, MekanismItems.MEKASUIT_PANTS);
+            event.registerItem(MekaSuitArmor.BOOTS, MekanismItems.MEKASUIT_BOOTS);
+        }
 
         event.registerBlock(RenderPropertiesProvider.boundingParticles(), MekanismBlocks.BOUNDING_BLOCK);
         ClientRegistrationUtil.registerBlockExtensions(event, MekanismBlocks.BLOCKS);

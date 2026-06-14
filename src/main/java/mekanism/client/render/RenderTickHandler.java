@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import mekanism.api.RelativeSide;
+import mekanism.client.ClientRegistration;
 import mekanism.client.gui.GuiMekanism;
 import mekanism.client.gui.GuiRadialSelector;
 import mekanism.client.render.armor.ISpecialGear;
@@ -178,6 +179,9 @@ public class RenderTickHandler {
 
     @SubscribeEvent
     public void renderArm(RenderArmEvent event) {
+        if (ClientRegistration.skipMekaSuitCustomArmorRendering()) {
+            return;
+        }
         AbstractClientPlayer player = event.getPlayer();
         ItemStack chestStack = player.getItemBySlot(EquipmentSlot.CHEST);
         if (chestStack.getItem() instanceof ItemMekaSuitArmor armorItem) {
